@@ -1,0 +1,9 @@
+#username {
+    font-weight: bold;
+    color: blue;
+}
+
+.logo-container img {
+    width: 150px;
+    height: auto;
+}
