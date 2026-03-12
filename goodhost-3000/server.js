@@ -4,18 +4,18 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
-// читаємо config
+
 const config = JSON.parse(fs.readFileSync("config.json"));
 const version = fs.readFileSync("version.txt", "utf-8");
 
 console.log(`[System] Starting ${config.appName} v${version}...`);
 
-// MODE 1 (буде використовуватись пізніше)
+
 if (config.mode === "mode1") {
     app.use(cors());
 }
 
-// email data
+
 const emails = [
     {
         sender: "admin@company.com",
