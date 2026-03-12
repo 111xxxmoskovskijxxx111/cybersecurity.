@@ -15,7 +15,26 @@ if (config.mode === "mode1") {
     app.use(cors());
 }
 
+if (config.mode === "csp-strict") {
+    app.use((req, res, next) => {
+        res.setHeader(
+            "Content-Security-Policy",
+            "default-src 'self';"
+        );
+        next();
+    });
+}
 
+
+if (config.mode === "csp-balanced") {
+    app.use((req, res, next) => {
+        res.setHeader(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src *; style-src *; script-src 'self' http://localhost:4000 http://localhost:6000;"
+        );
+        next();
+    });
+}
 const emails = [
     {
         sender: "admin@company.com",
