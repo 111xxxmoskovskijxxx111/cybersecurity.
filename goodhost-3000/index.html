@@ -3,13 +3,13 @@
 <head>
     <title>SecureMail Pro</title>
     <link rel="stylesheet" href="http://localhost:6000/theme.css">
-    
 </head>
 <body>
 
 <img src="http://localhost:6000/logo.png" width="150">
 
-<div id="username">John Smith</div>
+
+<div id="userDisplay">John Smith</div>
 
 <div style="display:flex;">
     <div id="sidebar" style="width:30%; border-right:1px solid gray;"></div>
@@ -18,14 +18,19 @@
 
 <script src="main.js"></script>
 
-
 <script
-src="http://localhost:6060/react-mock.js"
+src="http://localhost:6000/react-mock.js"
 integrity="sha256-aTkigdP2193j9b7v7/dZuvLksP0pTS9gbMYQTGIQEZk="
 crossorigin="anonymous">
 </script>
+
 <script src="http://localhost:4000/support.js"></script>
 <script src="http://localhost:5000/weather.js"></script>
+
+<input type="text" id="username" placeholder="Enter username">
+<button onclick="login()">Login</button>
+
+<p id="status"></p>
 
 </body>
 </html>

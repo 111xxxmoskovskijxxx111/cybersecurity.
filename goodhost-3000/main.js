@@ -18,3 +18,15 @@ fetch("http://localhost:3000/emails")
             sidebar.appendChild(div);
         });
     });
+
+
+    function login() {
+        const username = document.getElementById("username").value;
+    
+        fetch(`http://localhost:3000/login?username=${username}`)
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById("status").innerText = data;
+               
+            });
+    }

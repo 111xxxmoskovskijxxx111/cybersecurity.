@@ -53,6 +53,26 @@ app.use(express.static(__dirname));
 app.get("/emails", (req, res) => {
     res.json(emails);
 });
+const users = {
+    john: "123",
+    anna: "456"
+};
+
+
+app.get('/login', (req, res) => {
+    const username = req.query.username;
+
+    if (users[username]) {
+        res.setHeader('Set-Cookie', `SessionID=${username}-session; Path=/api; HttpOnly`);
+        res.send(`Login successful as ${username}`);
+    } else {
+        res.status(401).send("User not found");
+    }
+});
+app.get("/api/emails", (req, res) => {
+    console.log("👉 Cookie received:", req.headers.cookie);
+    res.json(emails);
+});
 
 app.listen(PORT, () => {
     console.log("GoodHost running on http://localhost:3000");
