@@ -1,3 +1,4 @@
+let sessions = [];
 const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
@@ -63,15 +64,53 @@ app.get('/login', (req, res) => {
     const username = req.query.username;
 
     if (users[username]) {
-        res.setHeader('Set-Cookie', `SessionID=${username}-session; Path=/api; HttpOnly; Secure`);
+        const sessionID = `${username}-session`;
+
+        sessions.push({
+            id: sessionID,
+            time: Date.now()
+        });
+
+        res.setHeader('Set-Cookie', `SessionID=${sessionID}; Path=/; HttpOnly`);
         res.send(`Login successful as ${username}`);
     } else {
         res.status(401).send("User not found");
     }
 });
 app.get("/api/emails", (req, res) => {
-    console.log("👉 Cookie received:", req.headers.cookie);
+    const cookie = req.headers.cookie;
+
+    if (!cookie) {
+        return res.status(401).send("Unauthorized");
+    }
+
+    const sessionID = cookie.split("=")[1];
+
+    const session = sessions.find(s => s.id === sessionID);
+
+if (!session) {
+    return res.status(401).send("Invalid session");
+}
+
+
+if (Date.now() - session.time > 2 * 60 * 1000) {
+    sessions = sessions.filter(s => s.id !== sessionID);
+    return res.status(401).send("Session expired");
+}
+
     res.json(emails);
+});
+
+app.get("/api/logout", (req, res) => {
+    const cookie = req.headers.cookie;
+
+    if (cookie) {
+        const sessionID = cookie.split("=")[1];
+
+        sessions = sessions.filter(s => s.id !== sessionID);
+    }
+
+    res.send("Logged out");
 });
 
 app.listen(PORT, () => {

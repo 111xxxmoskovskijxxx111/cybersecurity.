@@ -30,3 +30,12 @@ fetch("http://localhost:3000/emails")
                
             });
     }
+
+
+    function logout() {
+        fetch("http://localhost:3000/api/logout")
+            .then(() => {
+                document.cookie = "SessionID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                location.reload();
+            });
+    }
