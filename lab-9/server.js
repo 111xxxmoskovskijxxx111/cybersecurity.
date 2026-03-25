@@ -1,76 +1,44 @@
 const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
 const app = express();
-const PORT = 3000;
 
 
-const bookings = [];
+const PORT = 3001; 
 
 
-app.use(express.urlencoded({ extended: true }));
-
-app.use(express.static('public'));
-
-
-function escapeHTML(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'"]/g, 
-        tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag])
-    );
-}
-
-app.post('/book', (req, res) => {
-    
-    let { name, surname, email, age, date } = req.body;
-
-    
-    if (!name || !surname || !email || !age || !date) {
-        return res.status(400).send("<h1>400 Bad Request: All fields are required.</h1>");
+const db = new sqlite3.Database(':memory:', (err) => {
+    if (err) {
+        console.error("Ошибка базы данных:", err.message);
+    } else {
+        console.log("База данных SQLite успешно создана в памяти!");
     }
+});
 
-   
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).send("<h1>400 Bad Request: Invalid email format.</h1>");
-    }
+db.serialize(() => {
+    db.run(`CREATE TABLE bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, age INTEGER, date TEXT)`);
+    db.run(`INSERT INTO bookings (name, email, age, date) VALUES ('Admin', 'admin@camp.com', 40, '2026-01-01')`);
+    db.run(`INSERT INTO bookings (name, email, age, date) VALUES ('John', 'john@mail.com', 20, '2026-05-10')`);
+    db.run(`INSERT INTO bookings (name, email, age, date) VALUES ('Alice', 'alice@mail.com', 25, '2026-06-15')`);
+});
+
+
+app.get('/search-bookings', (req, res) => {
+    const searchName = req.query.name;
+    
+    
+    const query = "SELECT * FROM bookings WHERE name = ?";
+    
+    console.log("Выполняем безопасный SQL запрос. Ищем буквально имя:", searchName);
 
     
-    const ageNum = parseInt(age, 10);
-    if (isNaN(ageNum) || ageNum < 5 || ageNum > 100) {
-        return res.status(400).send("<h1>400 Bad Request: Age must be a number between 5 and 100.</h1>");
-    }
-
-    
-    if (isNaN(Date.parse(date))) {
-        return res.status(400).send("<h1>400 Bad Request: Invalid date format.</h1>");
-    }
-
-   
-    const safeName = escapeHTML(name);
-    const safeSurname = escapeHTML(surname);
-
-    
-    const newBooking = { name: safeName, surname: safeSurname, email, age: ageNum, date };
-    bookings.push(newBooking);
-
-    
-    res.send(`
-        <h2>Booking Confirmed!</h2>
-        <p><strong>Name:</strong> ${safeName}</p>
-        <p><strong>Surname:</strong> ${safeSurname}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Age:</strong> ${ageNum}</p>
-        <p><strong>Date:</strong> ${date}</p>
-        <hr>
-        <p><a href="/">Go back</a></p>
-    `);
+    db.all(query, [searchName], (err, rows) => {
+        if (err) return res.status(500).send("Database error: " + err.message);
+        res.json(rows);
+    });
 });
 
 app.listen(PORT, () => {
-    console.log(`Camp Booking Server is running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
+}).on('error', (err) => {
+    console.error("Ошибка при запуске сервера:", err.message);
 });
