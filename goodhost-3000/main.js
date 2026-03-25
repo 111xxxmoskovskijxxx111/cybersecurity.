@@ -26,7 +26,7 @@ fetch("http://localhost:3000/emails")
                 })
                 .then(res => {
                     if (!res.ok) {
-                        alert("CSRF защита сработала ❌");
+                        alert("CSRF защита сработала ");
                     }
                     return res.text();
                 })
@@ -44,9 +44,9 @@ fetch("http://localhost:3000/emails")
         const username = document.getElementById("username").value;
     
         fetch(`http://localhost:3000/login?username=${username}`)
-        .then(res => res.json())   // 🔥 было text → стало json
+        .then(res => res.json())   
         .then(data => {
-            csrfToken = data.csrfToken;   // 🔥 ВСТАВКА
+            csrfToken = data.csrfToken;   
             document.getElementById("status").innerText = data.message;
             location.reload();
         });
