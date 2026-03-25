@@ -1,5 +1,5 @@
 document.cookie = "SessionID=123456";
-
+let csrfToken = "";
 fetch("http://localhost:3000/emails")
     .then(res => res.json())
     .then(data => {
@@ -14,6 +14,26 @@ fetch("http://localhost:3000/emails")
             div.onclick = () => {
                 content.innerText = email.body;
             };
+            const btn = document.createElement("button");
+            btn.innerText = "Delete";
+            
+            btn.onclick = () => {
+                fetch(`http://localhost:3000/api/emails/delete/${email.id}`, {
+                    method: "POST",
+                    headers: {
+                        "x-csrf-token": csrfToken
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        alert("CSRF защита сработала ❌");
+                    }
+                    return res.text();
+                })
+                .then(() => location.reload());
+            };
+            
+            div.appendChild(btn);
 
             sidebar.appendChild(div);
         });
@@ -24,13 +44,13 @@ fetch("http://localhost:3000/emails")
         const username = document.getElementById("username").value;
     
         fetch(`http://localhost:3000/login?username=${username}`)
-            .then(res => res.text())
-            .then(data => {
-                document.getElementById("status").innerText = data;
-               
-            });
+        .then(res => res.json())   // 🔥 было text → стало json
+        .then(data => {
+            csrfToken = data.csrfToken;   // 🔥 ВСТАВКА
+            document.getElementById("status").innerText = data.message;
+            location.reload();
+        });
     }
-
 
     function logout() {
         fetch("http://localhost:3000/api/logout")

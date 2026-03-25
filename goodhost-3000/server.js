@@ -1,5 +1,6 @@
 let sessions = [];
 const express = require("express");
+const crypto = require("crypto");
 const fs = require("fs");
 const cors = require("cors");
 const app = express();
@@ -37,17 +38,10 @@ if (config.mode === "csp-balanced") {
     });
 }
 const emails = [
-    {
-        sender: "admin@company.com",
-        subject: "Welcome!",
-        body: "Welcome to SecureMail Pro!"
-    },
-    {
-        sender: "boss@company.com",
-        subject: "Meeting",
-        body: "Meeting at 3 PM today."
-    }
+    { id: 1, sender: "admin@company.com", subject: "Welcome!", body: "Welcome to SecureMail Pro!" },
+    { id: 2, sender: "boss@company.com", subject: "Meeting", body: "Meeting at 3 PM today." }
 ];
+
 
 app.use(express.static(__dirname));
 
@@ -66,13 +60,16 @@ app.get('/login', (req, res) => {
     if (users[username]) {
         const sessionID = `${username}-session`;
 
+        const csrfToken = crypto.randomBytes(16).toString("hex");
+
         sessions.push({
             id: sessionID,
-            time: Date.now()
+            time: Date.now(),
+            csrf: csrfToken
         });
 
-        res.setHeader('Set-Cookie', `SessionID=${sessionID}; Path=/; HttpOnly`);
-        res.send(`Login successful as ${username}`);
+        res.setHeader('Set-Cookie', `SessionID=${sessionID}; Path=/; HttpOnly; SameSite=Strict`);
+        res.json({ message: "Login successful", csrfToken });
     } else {
         res.status(401).send("User not found");
     }
@@ -112,7 +109,30 @@ app.get("/api/logout", (req, res) => {
 
     res.send("Logged out");
 });
+app.post("/api/emails/delete/:id", (req, res) => {
+    const cookie = req.headers.cookie;
+    const token = req.headers["x-csrf-token"];
 
+    if (!cookie) return res.status(401).send("Unauthorized");
+
+    const sessionID = cookie.split("=")[1];
+    const session = sessions.find(s => s.id === sessionID);
+
+    if (!session) return res.status(401).send("Invalid session");
+
+    if (session.csrf !== token) {
+        return res.status(403).send("Forbidden");
+    }
+
+    const id = parseInt(req.params.id);
+
+    const index = emails.findIndex(e => e.id === id);
+    if (index !== -1) {
+        emails.splice(index, 1);
+    }
+
+    res.send("Deleted securely");
+});
 app.listen(PORT, () => {
     console.log("GoodHost running on http://localhost:3000");
 });
